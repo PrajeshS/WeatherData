@@ -107,6 +107,8 @@ else:
                 comp = pd.merge(d1, d2, left_index=True, right_index=True, suffixes=('_A', '_B')).dropna()
                 if not comp.empty:
                     stats = comp.describe().T[['mean', 'std', 'min', 'max']]
+                    stats['P50'] = [comp.iloc[:,0].quantile(0.50),comp.iloc[:,1].quantile(0.50)]
+                    stats['P90'] = [comp.iloc[:,0].quantile(0.90),comp.iloc[:,1].quantile(0.90)]
                     stats['P95'] = [comp.iloc[:,0].quantile(0.95), comp.iloc[:,1].quantile(0.95)]
                     st.table(stats)
                     st.metric("Pearson's r", f"{comp.corr().iloc[0,1]:.4f}")
