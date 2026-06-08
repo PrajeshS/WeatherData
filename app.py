@@ -130,7 +130,7 @@ else:
                     row1[1].metric("RMSE", f"{rmse:.2f}")
                     row1[2].metric("MAE", f"{mae:.2f}")
 
-                    row2[0].metric("nRMSE %", f"{nrmse:.2f}%")
+                    row2[0].metric("nRMSE", f"{nrmse:.2f}%")
                     row2[1].metric("Bias", f"{bias:.2f}")
                     row2[2].metric("MAPE", f"{mape:.2f}%")
 
