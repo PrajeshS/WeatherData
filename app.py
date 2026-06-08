@@ -123,18 +123,15 @@ else:
                     nrmse = (rmse / m1.mean()) * 100 if m1.mean() != 0 else 0
                     bias = (m1 - m2).mean()
                     mape = (np.abs((m1 - m2) / m1).mean()) * 100
-                    
-                  
                     row1 = st.columns(3)
                     row2 = st.columns(3)
+                    row1[0].metric("r", 1)
+                    row1[1].metric("RMSE", 2)
+                    row1[2].metric("MAE", 3)
+                    row2[0].metric("nRMSE", 4)
+                    row2[1].metric("Bias", 5)
+                    row2[2].metric("MAPE", 6)
 
-                    row1[0].metric("Pearson's r", f"{comp.corr().iloc[0,1]:.4f}")
-                    row1[1].metric("RMSE", f"{rmse:.2f}")
-                    row1[2].metric("MAE", f"{mae:.2f}")
-
-                    row2[0].metric("nRMSE %", f"{nrmse:.2f}%")
-                    row2[1].metric("Bias", f"{bias:.2f}")
-                    row2[2].metric("MAPE", f"{mape:.2f}%")
                 else:
                     st.info('No values above 0.5 found in the overlapping timeframe.')
         else:
