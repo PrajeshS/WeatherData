@@ -125,6 +125,7 @@ else:
                     mape = (np.abs((m1 - m2) / m1).mean()) * 100
                     
                   
+                    met1, met2, met3, met4, met5, met6 = st.columns(6)
                     met1.metric("Pearson's r", f"{comp.corr().iloc[0,1]:.4f}")
                     met2.metric("RMSE", f"{rmse:.2f}")
                     met3.metric("MAE", f"{mae:.2f}")
