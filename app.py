@@ -69,14 +69,14 @@ def load_and_preprocess_data(base_dir, sensor_folders, selected_date, required_c
     return pd.concat(all_data, ignore_index=True) if all_data else pd.DataFrame()
 
 st.set_page_config(layout='wide', page_title='Weather Analysis')
-st.title('☀း Weather Sensor Analysis')
+st.title('Weather Sensor Data Analysis')
 
 common_dates = find_common_dates(DATA_DIR, SENSOR_FOLDERS)
 
 if not common_dates:
     st.warning('No common dates found. Please verify your data folders WMS 01-05.')
 else:
-    selected_date = st.sidebar.selectbox('Select Date', common_dates)
+    selected_date = st.sidebar.selectbox('📅 Select Date', common_dates)
     data = load_and_preprocess_data(DATA_DIR, SENSOR_FOLDERS, selected_date, REQUIRED_COLUMNS)
 
     if not data.empty:
