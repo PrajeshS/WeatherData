@@ -70,14 +70,14 @@ def load_and_preprocess_data(base_dir, sensor_folders, selected_date, target_par
     return pd.concat(all_data, ignore_index=True) if all_data else pd.DataFrame()
 
 st.set_page_config(layout='wide', page_title='Weather Analysis')
-st.title('☀️ Weather Sensor Analysis')
+st.title('☀️ Weather Sensor Data Analysis')
 
 common_dates = find_common_dates(DATA_DIR, SENSOR_FOLDERS)
 
 if not common_dates:
     st.warning('No common dates found. Verify WMS 01-05 folders.')
 else:
-    selected_date = st.sidebar.selectbox('Select Date', common_dates)
+    selected_date = st.sidebar.selectbox('📅 Select Date', common_dates)
     data = load_and_preprocess_data(DATA_DIR, SENSOR_FOLDERS, selected_date, TARGET_PARAMS)
 
     if not data.empty:
@@ -111,6 +111,8 @@ else:
                 if not comp.empty:
                     # Statistics Table
                     stats = comp.describe().T[['mean', 'std', 'min', 'max']]
+                    stats['P50'] = [comp.iloc[:,0].quantile(0.50), comp.iloc[:,1].quantile(0.50)]
+                    stats['P90'] = [comp.iloc[:,0].quantile(0.90), comp.iloc[:,1].quantile(0.90)]
                     stats['P95'] = [comp.iloc[:,0].quantile(0.95), comp.iloc[:,1].quantile(0.95)]
                     st.table(stats)
                     
