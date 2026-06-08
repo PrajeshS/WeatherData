@@ -69,7 +69,7 @@ def load_and_preprocess_data(base_dir, sensor_folders, selected_date, target_par
 
     return pd.concat(all_data, ignore_index=True) if all_data else pd.DataFrame()
 
-st.set_page_config(layout='wide', page_title='Weather Analysis')
+st.set_page_config(layout='wide', page_title='Weather Data Analysis')
 st.title('☀️ Weather Sensor Data Analysis')
 
 common_dates = find_common_dates(DATA_DIR, SENSOR_FOLDERS)
