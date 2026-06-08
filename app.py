@@ -121,12 +121,17 @@ else:
                     rmse = np.sqrt(((m1 - m2) ** 2).mean())
                     mae = np.abs(m1 - m2).mean()
                     nrmse = (rmse / m1.mean()) * 100 if m1.mean() != 0 else 0
+                    bias = (m1 - m2).mean()
+                    mape = (np.abs((m1 - m2) / m1).mean()) * 100
                     
-                    met1, met2, met3, met4 = st.columns(4)
+                    met1, met2, met3 = st.columns(3)
+                    met4, met5, met6 = st.columns(3)
                     met1.metric("Pearson's r", f"{comp.corr().iloc[0,1]:.4f}")
                     met2.metric("RMSE", f"{rmse:.2f}")
                     met3.metric("MAE", f"{mae:.2f}")
                     met4.metric("nRMSE %", f"{nrmse:.2f}%")
+                    met5.metric("Bias", f"{bias:.2f}")
+                    met6.metric("MAPE", f"{mape:.2f}%")
                 else:
                     st.info('No values above 0.5 found in the overlapping timeframe.')
         else:
