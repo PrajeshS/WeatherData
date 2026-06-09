@@ -1,6 +1,12 @@
+#!/usr/bin/python3
+
+# AmmonitOR API Client for GitHub Actions
+# Based on AmmonitOR REST API example
+
 import requests
 import base64
 import os
+import json
 from datetime import datetime, timedelta
 
 # Configuration from GitHub Environment Variables
@@ -8,7 +14,8 @@ USERNAME = os.getenv('AM_USER')
 PROJECT_KEY = os.getenv('AM_PROJECT')
 GITHUB_TOKEN = os.getenv('GH_PAT')
 REPO_PATH = "PrajeshS/WeatherData"
-BASE_URL = "https://or.ammonit.com/api"
+SERVER_URL = "https://or.ammonit.com"
+API_BASE = f"{SERVER_URL}/api"
 
 DEVICE_MAP = {
     "WMS 01": "G254070",
@@ -18,85 +25,188 @@ DEVICE_MAP = {
     "WMS 05": "G254074"
 }
 
-def run_sync():
-    # Debug: Print what we have
-    print(f"DEBUG - USERNAME: {USERNAME}")
-    print(f"DEBUG - PROJECT_KEY: {PROJECT_KEY}")
-    print(f"DEBUG - GITHUB_TOKEN: {'***' if GITHUB_TOKEN else 'MISSING'}")
-    
-    # 1. Target Yesterday's Date (YYYYMMDD)
-    yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y%m%d')
-    print(f"Targeting data for: {yesterday}")
+# SSL verification
+VERIFY_SSL = True
 
-    # 2. Authenticate
-    url = f"{BASE_URL}/auth-token/"
-    data = {"username": USERNAME, "project_key": PROJECT_KEY, "app_id": "GitHubActionSync"}
-    print(f"DEBUG - Auth URL: {url}")
-    print(f"DEBUG - Auth data: {data}")
-    
-    r = requests.post(url, data=data, verify=True)
-    print(f"DEBUG - Response status: {r.status_code}")
-    print(f"DEBUG - Response text: {r.text}")
-    print(f"DEBUG - Response headers: {r.headers}")
+
+def get_token():
+    """Get authentication token from AmmonitOR"""
+    url = API_BASE + "/auth-token/"
+    data = {
+        "username": USERNAME,
+        "project_key": PROJECT_KEY,
+        "app_id": "GitHubActionSync"
+    }
     
     try:
-        token = r.json().get('token')
-    except Exception as e:
-        print(f"ERROR - Failed to parse JSON response: {e}")
-        print(f"ERROR - Raw response: {r.text}")
-        return
+        r = requests.post(url, data=data, verify=VERIFY_SSL)
+        
+        if r.status_code != 200:
+            print(f"ERROR: Authentication failed with status {r.status_code}")
+            print(f"Response: {r.text}")
+            return None
+            
+        response_data = r.json()
+        token = response_data.get('token')
+        
+        if not token:
+            print("ERROR: No token in response. Ensure you approved the enquiry in the portal.")
+            return None
+            
+        return token
+        
+    except requests.exceptions.RequestException as e:
+        print(f"ERROR: Authentication request failed: {e}")
+        return None
+
+
+def list_files(token, project_key, device_serial, filetype="primary"):
+    """List data files for a device"""
+    url = f"{API_BASE}/{project_key}/{device_serial}/files/{filetype}/"
+    headers = {"Authorization": f"Token {token}"}
     
-    if not token:
-        print("Failed to authenticate with AmmonitOR. Ensure you approved the enquiry in the portal.")
-        return
+    try:
+        r = requests.get(url, headers=headers, verify=VERIFY_SSL)
+        
+        if r.status_code != 200:
+            print(f"   ! Failed to list files: {r.status_code}")
+            return None
+            
+        return r.json()
+        
+    except requests.exceptions.RequestException as e:
+        print(f"   ! Error listing files: {e}")
+        return None
 
-    auth_header = {"Authorization": f"Token {token}"}
+
+def get_file_download(token, project_key, device_serial, filename, filetype="primary"):
+    """Download data file content"""
+    url = f"{API_BASE}/{project_key}/{device_serial}/files/{filetype}/{filename}/"
+    headers = {"Authorization": f"Token {token}"}
+    
+    try:
+        r = requests.get(url, headers=headers, verify=VERIFY_SSL)
+        
+        if r.status_code != 200:
+            print(f"   ! Failed to download file: {r.status_code}")
+            return None
+            
+        response_data = r.json()
+        return response_data.get('file_content')
+        
+    except requests.exceptions.RequestException as e:
+        print(f"   ! Error downloading file: {e}")
+        return None
+
+
+def check_github_file(repo_path, folder, filename):
+    """Check if file already exists on GitHub"""
+    url = f"https://api.github.com/repos/{repo_path}/contents/{folder}/{filename}"
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    
+    try:
+        r = requests.get(url, headers=headers, verify=VERIFY_SSL)
+        return r.status_code == 200
+        
+    except requests.exceptions.RequestException as e:
+        print(f"   ! Error checking GitHub: {e}")
+        return False
 
-    for folder, serial in DEVICE_MAP.items():
-        print(f"Checking {folder} ({serial})...")
 
-        # 3. Get file list
-        list_url = f"{BASE_URL}/{PROJECT_KEY}/{serial}/files/primary/"
-        files_req = requests.get(list_url, headers=auth_header, verify=True)
-        if files_req.status_code != 200: 
-            print(f"   ! Failed to get file list: {files_req.status_code}")
-            continue
-
-        files = files_req.json()
-
-        # 4. Find the file specifically for yesterday
-        target_file = next((f for f in reversed(files) if f'_{yesterday}_' in f['original_filename']), None)
-
-        if not target_file:
-            print(f"   ! No file found yet for {yesterday}. Skipping until next hourly retry.")
-            continue
-
-        filename = target_file['original_filename']
-
-        # 5. Check if already on GitHub
-        gh_url = f"https://api.github.com/repos/{REPO_PATH}/contents/{folder}/{filename}"
-        res = requests.get(gh_url, headers=headers)
-
-        if res.status_code == 200:
-            print(f"   - {filename} already exists on GitHub. Skipping.")
-            continue
-
-        # 6. Download and Upload
-        dl_url = f"{BASE_URL}/{PROJECT_KEY}/{serial}/files/primary/{filename}/"
-        content_res = requests.get(dl_url, headers=auth_header).json()
-        csv_content = content_res.get('file_content')
-
+def upload_to_github(repo_path, folder, filename, csv_content):
+    """Upload file to GitHub"""
+    url = f"https://api.github.com/repos/{repo_path}/contents/{folder}/{filename}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    
+    try:
+        encoded_content = base64.b64encode(csv_content.encode()).decode()
+        
         payload = {
             "message": f"Automated Sync: {filename}",
-            "content": base64.b64encode(csv_content.encode()).decode(),
+            "content": encoded_content
         }
+        
+        r = requests.put(url, headers=headers, json=payload, verify=VERIFY_SSL)
+        
+        if r.status_code in [200, 201]:
+            return True
+        else:
+            print(f"   ! GitHub upload failed: {r.status_code}")
+            return False
+            
+    except requests.exceptions.RequestException as e:
+        print(f"   ! Error uploading to GitHub: {e}")
+        return False
 
-        put_res = requests.put(gh_url, headers=headers, json=payload)
-        if put_res.status_code in [200, 201]:
+
+def run_sync():
+    """Main sync function"""
+    
+    # Validate configuration
+    if not all([USERNAME, PROJECT_KEY, GITHUB_TOKEN]):
+        print("ERROR: Missing required environment variables")
+        return
+    
+    # Get yesterday's date
+    yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y%m%d')
+    print(f"Targeting data for: {yesterday}")
+    
+    # Authenticate
+    print("Authenticating with AmmonitOR...")
+    token = get_token()
+    
+    if not token:
+        print("ERROR: Failed to obtain authentication token")
+        return
+    
+    print("✅ Authentication successful")
+    
+    # Process each device
+    for folder, serial in DEVICE_MAP.items():
+        print(f"\nChecking {folder} ({serial})...")
+        
+        # Get file list
+        files = list_files(token, PROJECT_KEY, serial, "primary")
+        
+        if not files:
+            print(f"   ! No files found for {serial}")
+            continue
+        
+        # Find target file for yesterday
+        target_file = next(
+            (f for f in reversed(files) if f'_{yesterday}_' in f.get('original_filename', '')),
+            None
+        )
+        
+        if not target_file:
+            print(f"   ! No file found for {yesterday}")
+            continue
+        
+        filename = target_file['original_filename']
+        print(f"   Found: {filename}")
+        
+        # Check if already on GitHub
+        if check_github_file(REPO_PATH, folder, filename):
+            print(f"   - Already exists on GitHub. Skipping.")
+            continue
+        
+        # Download from AmmonitOR
+        print(f"   Downloading from AmmonitOR...")
+        csv_content = get_file_download(token, PROJECT_KEY, serial, filename, "primary")
+        
+        if not csv_content:
+            print(f"   ❌ Failed to download file")
+            continue
+        
+        # Upload to GitHub
+        print(f"   Uploading to GitHub...")
+        if upload_to_github(REPO_PATH, folder, filename, csv_content):
             print(f"   ✅ Successfully uploaded: {filename}")
         else:
-            print(f"   ❌ Failed to upload {filename}: {put_res.status_code}")
+            print(f"   ❌ Failed to upload {filename}")
+    
+    print("\n✅ Sync complete")
+
 
 if __name__ == '__main__':
     run_sync()
