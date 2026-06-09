@@ -1,0 +1,30 @@
+workflow_yaml = """
+name: Hourly Weather Data Sync
+on:
+  schedule:
+    - cron: '0 * * * *' # Runs at the start of every hour
+  workflow_dispatch: # Allows manual run
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run sync script
+        env:
+          AM_USER: ${{ secrets.AM_USER }}
+          AM_PROJECT: ${{ secrets.AM_PROJECT }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: python sync_data.py
+"""
+print("Workflow YAML updated with correct Secret names and Hourly schedule.")
