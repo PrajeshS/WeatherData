@@ -34,7 +34,7 @@ def run_sync():
     print(f"DEBUG - Auth URL: {url}")
     print(f"DEBUG - Auth data: {data}")
     
-    r = requests.post(url, data=data)
+    r = requests.post(url, data=data, verify=True)
     print(f"DEBUG - Response status: {r.status_code}")
     print(f"DEBUG - Response text: {r.text}")
     print(f"DEBUG - Response headers: {r.headers}")
@@ -58,7 +58,7 @@ def run_sync():
 
         # 3. Get file list
         list_url = f"{BASE_URL}/{PROJECT_KEY}/{serial}/files/primary/"
-        files_req = requests.get(list_url, headers=auth_header)
+        files_req = requests.get(list_url, headers=auth_header, verify=True)
         if files_req.status_code != 200: 
             print(f"   ! Failed to get file list: {files_req.status_code}")
             continue
