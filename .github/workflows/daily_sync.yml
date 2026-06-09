@@ -1,9 +1,8 @@
-workflow_yaml = """
 name: Hourly Weather Data Sync
 on:
   schedule:
-    - cron: '0 * * * *' # Runs at the start of every hour
-  workflow_dispatch: # Allows manual run
+    - cron: '0 * * * *'
+  workflow_dispatch: {}
 
 jobs:
   sync:
@@ -26,5 +25,3 @@ jobs:
           AM_PROJECT: ${{ secrets.AM_PROJECT }}
           GH_PAT: ${{ secrets.GH_PAT }}
         run: python sync_data.py
-"""
-print("Workflow YAML updated with correct Secret names and Hourly schedule.")
