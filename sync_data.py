@@ -4,7 +4,6 @@ import os
 from datetime import datetime, timedelta
 
 # Configuration from GitHub Environment Variables
-# Note: These match the Secret names we set in the YAML
 USERNAME = os.getenv('AM_USER')
 PROJECT_KEY = os.getenv('AM_PROJECT')
 GITHUB_TOKEN = os.getenv('GH_PAT')
@@ -20,6 +19,11 @@ DEVICE_MAP = {
 }
 
 def run_sync():
+    # Debug: Print what we have
+    print(f"DEBUG - USERNAME: {USERNAME}")
+    print(f"DEBUG - PROJECT_KEY: {PROJECT_KEY}")
+    print(f"DEBUG - GITHUB_TOKEN: {'***' if GITHUB_TOKEN else 'MISSING'}")
+    
     # 1. Target Yesterday's Date (YYYYMMDD)
     yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y%m%d')
     print(f"Targeting data for: {yesterday}")
@@ -27,8 +31,21 @@ def run_sync():
     # 2. Authenticate
     url = f"{BASE_URL}/auth-token/"
     data = {"username": USERNAME, "project_key": PROJECT_KEY, "app_id": "GitHubActionSync"}
+    print(f"DEBUG - Auth URL: {url}")
+    print(f"DEBUG - Auth data: {data}")
+    
     r = requests.post(url, data=data)
-    token = r.json().get('token')
+    print(f"DEBUG - Response status: {r.status_code}")
+    print(f"DEBUG - Response text: {r.text}")
+    print(f"DEBUG - Response headers: {r.headers}")
+    
+    try:
+        token = r.json().get('token')
+    except Exception as e:
+        print(f"ERROR - Failed to parse JSON response: {e}")
+        print(f"ERROR - Raw response: {r.text}")
+        return
+    
     if not token:
         print("Failed to authenticate with AmmonitOR. Ensure you approved the enquiry in the portal.")
         return
@@ -42,7 +59,9 @@ def run_sync():
         # 3. Get file list
         list_url = f"{BASE_URL}/{PROJECT_KEY}/{serial}/files/primary/"
         files_req = requests.get(list_url, headers=auth_header)
-        if files_req.status_code != 200: continue
+        if files_req.status_code != 200: 
+            print(f"   ! Failed to get file list: {files_req.status_code}")
+            continue
 
         files = files_req.json()
 
