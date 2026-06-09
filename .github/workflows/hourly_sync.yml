@@ -1,0 +1,27 @@
+name: Hourly Weather Data Sync
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run sync script
+        env:
+          AM_USER: ${{ secrets.AM_USER }}
+          AM_PROJECT: ${{ secrets.AM_PROJECT }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: python sync_data.py
