@@ -1,12 +1,13 @@
 import requests
-import json
 import base64
 import os
+from datetime import datetime, timedelta
 
 # Configuration from GitHub Environment Variables
-USERNAME = os.getenv('AMMONITOR_USER')
-PROJECT_KEY = os.getenv('AMMONITOR_PROJECT')
-GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
+# Note: These match the Secret names we set in the YAML
+USERNAME = os.getenv('AM_USER')
+PROJECT_KEY = os.getenv('AM_PROJECT')
+GITHUB_TOKEN = os.getenv('GH_PAT')
 REPO_PATH = "PrajeshS/WeatherData"
 BASE_URL = "https://or.ammonit.com/api"
 
@@ -19,40 +20,64 @@ DEVICE_MAP = {
 }
 
 def run_sync():
+    # 1. Target Yesterday's Date (YYYYMMDD)
+    yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y%m%d')
+    print(f"Targeting data for: {yesterday}")
+
+    # 2. Authenticate
     url = f"{BASE_URL}/auth-token/"
     data = {"username": USERNAME, "project_key": PROJECT_KEY, "app_id": "GitHubActionSync"}
     r = requests.post(url, data=data)
     token = r.json().get('token')
-    if not token: 
-        print("Failed to authenticate with AmmonitOR")
+    if not token:
+        print("Failed to authenticate with AmmonitOR. Ensure you approved the enquiry in the portal.")
         return
 
     auth_header = {"Authorization": f"Token {token}"}
-    
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+
     for folder, serial in DEVICE_MAP.items():
+        print(f"Checking {folder} ({serial})...")
+
+        # 3. Get file list
         list_url = f"{BASE_URL}/{PROJECT_KEY}/{serial}/files/primary/"
         files_req = requests.get(list_url, headers=auth_header)
         if files_req.status_code != 200: continue
-        
+
         files = files_req.json()
-        if not files: continue
-        
-        filename = files[-1]['original_filename']
-        dl_url = f"{BASE_URL}/{PROJECT_KEY}/{serial}/files/primary/{filename}/"
-        content = requests.get(dl_url, headers=auth_header).json().get('file_content')
-        
+
+        # 4. Find the file specifically for yesterday
+        target_file = next((f for f in reversed(files) if f'_{yesterday}_' in f['original_filename']), None)
+
+        if not target_file:
+            print(f"   ! No file found yet for {yesterday}. Skipping until next hourly retry.")
+            continue
+
+        filename = target_file['original_filename']
+
+        # 5. Check if already on GitHub
         gh_url = f"https://api.github.com/repos/{REPO_PATH}/contents/{folder}/{filename}"
-        headers = {"Authorization": f"token {GITHUB_TOKEN}"}
         res = requests.get(gh_url, headers=headers)
-        sha = res.json().get('sha') if res.status_code == 200 else None
-        
+
+        if res.status_code == 200:
+            print(f"   - {filename} already exists on GitHub. Skipping.")
+            continue
+
+        # 6. Download and Upload
+        dl_url = f"{BASE_URL}/{PROJECT_KEY}/{serial}/files/primary/{filename}/"
+        content_res = requests.get(dl_url, headers=auth_header).json()
+        csv_content = content_res.get('file_content')
+
         payload = {
-            "message": f"GitHub Action Sync: {filename}",
-            "content": base64.b64encode(content.encode()).decode(),
+            "message": f"Automated Sync: {filename}",
+            "content": base64.b64encode(csv_content.encode()).decode(),
         }
-        if sha: payload["sha"] = sha
+
         put_res = requests.put(gh_url, headers=headers, json=payload)
-        print(f"Uploaded {filename} to {folder}: {put_res.status_code}")
+        if put_res.status_code in [200, 201]:
+            print(f"   ✅ Successfully uploaded: {filename}")
+        else:
+            print(f"   ❌ Failed to upload {filename}: {put_res.status_code}")
 
 if __name__ == '__main__':
     run_sync()
