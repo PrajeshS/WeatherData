@@ -18,19 +18,24 @@ TARGET_PARAMS = {
 }
 
 DATA_DIR = '.'
+  
+def find_available_dates(base_dir, sensor_folders):
+    all_dates = set()
 
-@st.cache_data
-def find_common_dates(base_dir, sensor_folders):
-    all_sensor_dates = {}
     for folder in sensor_folders:
         folder_path = os.path.join(base_dir, folder)
-        if not os.path.isdir(folder_path): continue
+
+        if not os.path.isdir(folder_path):
+            continue
+
         csv_files = glob.glob(os.path.join(folder_path, '*_????????_*.csv'))
-        dates = {re.search(r'_(\d{8})_', os.path.basename(f)).group(1) for f in csv_files if re.search(r'_(\d{8})_', os.path.basename(f))}
-        all_sensor_dates[folder] = dates
-    if not all_sensor_dates or len(all_sensor_dates) < len(sensor_folders):
-        return []
-    return sorted(list(set.intersection(*all_sensor_dates.values())))
+
+        for f in csv_files:
+            match = re.search(r'_(\d{8})_', os.path.basename(f))
+            if match:
+                all_dates.add(match.group(1))
+
+    return sorted(all_dates, reverse=True)
 
 @st.cache_data
 def load_and_preprocess_data(base_dir, sensor_folders, selected_date, target_params):
@@ -72,12 +77,12 @@ def load_and_preprocess_data(base_dir, sensor_folders, selected_date, target_par
 st.set_page_config(layout='wide', page_title='Weather Data Analysis')
 st.title('☀️ Weather Sensor Data Analysis')
 
-common_dates = find_common_dates(DATA_DIR, SENSOR_FOLDERS)
+available_dates = find_available_dates(DATA_DIR, SENSOR_FOLDERS)
 
-if not common_dates:
-    st.warning('No common dates found. Verify WMS 01-05 folders.')
+if not available_dates:
+    st.warning('No available dates found. Verify WMS 01-05 folders.')
 else:
-    selected_date = st.sidebar.selectbox('📅 Select Date', common_dates)
+    selected_date = st.sidebar.selectbox('📅 Select Date', available_dates)
     data = load_and_preprocess_data(DATA_DIR, SENSOR_FOLDERS, selected_date, TARGET_PARAMS)
 
     if not data.empty:
