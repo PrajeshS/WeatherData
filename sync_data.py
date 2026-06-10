@@ -13,9 +13,11 @@ from datetime import datetime, timedelta
 USERNAME = os.getenv('AM_USER')
 PROJECT_KEY = os.getenv('AM_PROJECT')
 GITHUB_TOKEN = os.getenv('GH_PAT')
+AM_TOKEN = os.getenv('AM_TOKEN')
 REPO_PATH = "PrajeshS/WeatherData"
 SERVER_URL = "https://or.ammonit.com"
 API_BASE = f"{SERVER_URL}/api"
+
 
 DEVICE_MAP = {
     "WMS 01": "G254070",
@@ -144,7 +146,7 @@ def run_sync():
     """Main sync function"""
     
     # Validate configuration
-    if not all([USERNAME, PROJECT_KEY, GITHUB_TOKEN]):
+    if not all([USERNAME, PROJECT_KEY, GITHUB_TOKEN, AM_TOKEN]):
         print("ERROR: Missing required environment variables")
         return
     
@@ -153,14 +155,13 @@ def run_sync():
     print(f"Targeting data for: {yesterday}")
     
     # Authenticate
-    print("Authenticating with AmmonitOR...")
-    token = get_token()
-    
+    token = AM_TOKEN
+
     if not token:
-        print("ERROR: Failed to obtain authentication token")
+        print("ERROR: Missing AM_TOKEN secret")
         return
-    
-    print("✅ Authentication successful")
+
+    print("✅ Using stored AmmonitOR token")
     
     # Process each device
     for folder, serial in DEVICE_MAP.items():
