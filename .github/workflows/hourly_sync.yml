@@ -1,4 +1,4 @@
-name: Hourly Weather Data Sync
+name: Weather Data Sync
 on:
   schedule:
     - cron: '0 * * * *'
