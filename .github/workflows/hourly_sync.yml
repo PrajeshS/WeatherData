@@ -28,4 +28,5 @@ jobs:
           AM_USER: ${{ secrets.AM_USER }}
           AM_PROJECT: ${{ secrets.AM_PROJECT }}
           GH_PAT: ${{ secrets.GH_PAT }}
+          AM_TOKEN: ${{ secrets.AM_TOKEN }}
         run: python sync_data.py
