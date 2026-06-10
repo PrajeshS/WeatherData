@@ -47,6 +47,7 @@ def get_token():
             return None
             
         response_data = r.json()
+        print(f"Auth response: {response_data}")
         token = response_data.get('token')
         
         if not token:
