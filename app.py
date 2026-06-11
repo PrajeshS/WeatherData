@@ -152,30 +152,42 @@ if data.empty:
 data["Time"] = pd.to_datetime(data["Time"])
 data = data.sort_values("Time")
 
+# -----------------------------
+# FILTER (safe for both modes)
+# -----------------------------
+if mode == "Date Range":
     filtered = data[
-    (data['Time'].dt.date >= start_date.date()) &
-    (data['Time'].dt.date <= end_date.date())
+        (data["Time"].dt.date >= start_date.date()) &
+        (data["Time"].dt.date <= end_date.date())
     ]
-    avg_table = (
+else:
+    filtered = data.copy()
+
+# -----------------------------
+# AVERAGE TABLE
+# -----------------------------
+avg_table = (
     filtered
-    .groupby('Time')[['GTI Irradiance', 'Albedo Down', 'Albedo Up']]
+    .groupby("Time")[["GTI Irradiance", "Albedo Down", "Albedo Up"]]
     .mean()
     .reset_index()
-    )
-    avg_table.columns = [
-    'Time',
-    'Avg GTI Irradiance',
-    'Avg Albedo Down',
-    'Avg Albedo Up'
-    ]
-    csv = avg_table.to_csv(index=False).encode('utf-8')
+)
 
-    st.download_button(
-        label="📥 Download Average Data CSV",
-        data=csv,
-        file_name=f"weather_avg_{start_date.date()}_{end_date.date()}.csv",
-        mime="text/csv"
-    )
+avg_table.columns = [
+    "Time",
+    "Avg GTI Irradiance",
+    "Avg Albedo Down",
+    "Avg Albedo Up"
+]
+
+csv = avg_table.to_csv(index=False).encode("utf-8")
+
+st.download_button(
+    label="📥 Download Average Data CSV",
+    data=csv,
+    file_name="weather_avg.csv",
+    mime="text/csv"
+)
 
     if not data.empty:
         available_params = [c for c in data.columns if c not in ['Time', 'Sensor']]
