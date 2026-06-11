@@ -119,7 +119,7 @@ if selected_date not in available_dates:
     st.stop()
 
 selected_date_str = selected_date.strftime("%Y%m%d")
-    signature = get_data_signature(DATA_DIR, SENSOR_FOLDERS)
+signature = get_data_signature(DATA_DIR, SENSOR_FOLDERS)
 
     data = load_and_preprocess_data(
     DATA_DIR,
