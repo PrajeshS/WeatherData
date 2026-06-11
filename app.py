@@ -74,7 +74,13 @@ def load_and_preprocess_data(base_dir, sensor_folders, dates_to_load, target_par
         if not csv_files: continue
 
         try:
-            df = pd.read_csv(csv_files[0], sep=',', skipinitialspace=True, on_bad_lines='skip')
+            df_list = []
+
+            for f in csv_files:
+                temp = pd.read_csv(f, sep=',', skipinitialspace=True, on_bad_lines='skip')
+                 df_list.append(temp)
+
+            df = pd.concat(df_list, ignore_index=True)
             
             # Clean headers: remove non-printable chars and quotes
             df.columns = [re.sub(r'[^\x20-\x7E]', '', str(c)).strip().replace('"', '') for c in df.columns]
