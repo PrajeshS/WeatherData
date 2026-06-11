@@ -57,11 +57,13 @@ def find_available_dates(base_dir, sensor_folders):
         reverse=True
     )
 @st.cache_data
-def load_and_preprocess_data(base_dir, sensor_folders, target_params, signature):
+def load_and_preprocess_data(base_dir, sensor_folders, dates_to_load, target_params, signature):
     all_data = []
     for folder in sensor_folders:
-        file_pattern = os.path.join(base_dir, folder, '*.csv')
-        csv_files = glob.glob(file_pattern)
+        csv_files = []
+        for d in dates_to_load:
+            pattern = os.path.join(base_dir, folder, f'*_{d}_*.csv')
+            csv_files.extend(glob.glob(pattern))
         if not csv_files: continue
 
         try:
@@ -95,18 +97,39 @@ def load_and_preprocess_data(base_dir, sensor_folders, target_params, signature)
 
 st.set_page_config(layout='wide', page_title='Weather Data Analysis')
 st.title('☀️ Weather Sensor Data Analysis')
-
+mode = st.sidebar.radio("Mode", ["Single Day", "Date Range"])
 available_dates = find_available_dates(DATA_DIR, SENSOR_FOLDERS)
+
 if not available_dates:
-    st.warning('No available dates found. Verify WMS 01-05 folders.')
+    st.warning("No available dates found. Verify folders.")
+    st.stop()
+
+min_d = min(available_dates)
+max_d = max(available_dates)
+
+mode = st.sidebar.radio("Mode", ["Single Day", "Date Range"])
+
+if mode == "Single Day":
+    selected_date = st.sidebar.date_input(
+        "Select Date",
+        value=max_d,
+        min_value=min_d,
+        max_value=max_d
+    )
+
+    selected_date_str = selected_date.strftime("%Y%m%d")
+
+    dates_to_load = [selected_date_str]
 
 else:
     start_date, end_date = st.sidebar.date_input(
-    "📅 Select Date Range",
-    value=(min(available_dates), max(available_dates)),
-    min_value=min(available_dates),
-    max_value=max(available_dates)
+        "Select Date Range",
+        value=(min_d, max_d),
+        min_value=min_d,
+        max_value=max_d
     )
+
+    dates_to_load = pd.date_range(start_date, end_date).strftime("%Y%m%d").tolist()
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
 
@@ -115,10 +138,12 @@ else:
     data = load_and_preprocess_data(
     DATA_DIR,
     SENSOR_FOLDERS,
+    dates_to_load,
     TARGET_PARAMS,
     signature
     )
     data['Time'] = pd.to_datetime(data['Time'])
+    data = data.sort_values("Time")
 
     filtered = data[
     (data['Time'].dt.date >= start_date.date()) &
