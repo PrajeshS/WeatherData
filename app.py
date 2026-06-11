@@ -57,10 +57,10 @@ def find_available_dates(base_dir, sensor_folders):
         reverse=True
     )
 @st.cache_data
-def load_and_preprocess_data(base_dir, sensor_folders, selected_date_str, target_params, signature):
+def load_and_preprocess_data(base_dir, sensor_folders, target_params, signature):
     all_data = []
     for folder in sensor_folders:
-        file_pattern = os.path.join(base_dir, folder, f'*_{selected_date_str}_*.csv')
+        file_pattern = os.path.join(base_dir, folder, '*.csv')
         csv_files = glob.glob(file_pattern)
         if not csv_files: continue
 
@@ -110,21 +110,18 @@ else:
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
 
-    if selected_date not in available_dates:
-        st.error("Selected date is not available.")
-        st.stop()
+
 
     selected_date_str = selected_date.strftime("%Y%m%d")
 
     signature = get_data_signature(DATA_DIR, SENSOR_FOLDERS)
 
     data = load_and_preprocess_data(
-        DATA_DIR,
-        SENSOR_FOLDERS,
-        selected_date_str,   # ✅ FIXED (was selected_date)
-        TARGET_PARAMS,
-        signature
-    )
+    DATA_DIR,
+    SENSOR_FOLDERS,
+    target_params=TARGET_PARAMS,
+    signature=signature
+)
     data['Time'] = pd.to_datetime(data['Time'])
 
     filtered = data[
