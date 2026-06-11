@@ -97,29 +97,41 @@ def load_and_preprocess_data(base_dir, sensor_folders, dates_to_load, target_par
 
 st.set_page_config(layout='wide', page_title='Weather Data Analysis')
 st.title('☀️ Weather Sensor Data Analysis')
-mode = st.sidebar.radio("Mode", ["Single Day", "Date Range"])
+mode = st.sidebar.radio(
+    "Mode",
+    ["Single Day", "Date Range"],
+    key="mode_selector"
+)
 available_dates = find_available_dates(DATA_DIR, SENSOR_FOLDERS)
 
 if not available_dates:
-    st.warning("No available dates found. Verify folders.")
+    st.warning("No available dates found")
     st.stop()
 
 min_d = min(available_dates)
 max_d = max(available_dates)
-
-mode = st.sidebar.radio("Mode", ["Single Day", "Date Range"])
 
 if mode == "Single Day":
     selected_date = st.sidebar.date_input(
         "Select Date",
         value=max_d,
         min_value=min_d,
-        max_value=max_d
+        max_value=max_d,
+        key="single_date"
     )
 
-    selected_date_str = selected_date.strftime("%Y%m%d")
+    dates_to_load = [selected_date.strftime("%Y%m%d")]
 
-    dates_to_load = [selected_date_str]
+else:
+    start_date, end_date = st.sidebar.date_input(
+        "Select Date Range",
+        value=(min_d, max_d),
+        min_value=min_d,
+        max_value=max_d,
+        key="range_date"
+    )
+
+    dates_to_load = pd.date_range(start_date, end_date).strftime("%Y%m%d").tolist()
 
 else:
     start_date, end_date = st.sidebar.date_input(
@@ -142,8 +154,13 @@ else:
     TARGET_PARAMS,
     signature
     )
-    data['Time'] = pd.to_datetime(data['Time'])
-    data = data.sort_values("Time")
+
+if data.empty:
+    st.error("No data loaded")
+    st.stop()
+
+data["Time"] = pd.to_datetime(data["Time"])
+data = data.sort_values("Time")
 
     filtered = data[
     (data['Time'].dt.date >= start_date.date()) &
