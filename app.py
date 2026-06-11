@@ -106,22 +106,18 @@ else:
     value=(min(available_dates), max(available_dates)),
     min_value=min(available_dates),
     max_value=max(available_dates)
-)
+    )
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
-
-
-
-    selected_date_str = selected_date.strftime("%Y%m%d")
 
     signature = get_data_signature(DATA_DIR, SENSOR_FOLDERS)
 
     data = load_and_preprocess_data(
     DATA_DIR,
     SENSOR_FOLDERS,
-    target_params=TARGET_PARAMS,
-    signature=signature
-)
+    TARGET_PARAMS,
+    signature
+    )
     data['Time'] = pd.to_datetime(data['Time'])
 
     filtered = data[
