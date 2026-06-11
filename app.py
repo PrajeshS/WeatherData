@@ -97,35 +97,36 @@ st.set_page_config(layout='wide', page_title='Weather Data Analysis')
 st.title('☀️ Weather Sensor Data Analysis')
 
 available_dates = find_available_dates(DATA_DIR, SENSOR_FOLDERS)
-
 if not available_dates:
     st.warning('No available dates found. Verify WMS 01-05 folders.')
+
 else:
     selected_date = st.sidebar.date_input(
-    "📅 Select Date",
-    min_value=min(available_dates),
-    max_value=max(available_dates),
-    value=max(available_dates)
-)
-selected_date = st.sidebar.date_input(
-    "📅 Select Date",
-    min_value=min(available_dates),
-    max_value=max(available_dates),
-    value=max(available_dates)
-)
+        "📅 Select Date",
+        min_value=min(available_dates),
+        max_value=max(available_dates),
+        value=max(available_dates)
+    )
 
-if selected_date not in available_dates:
-    st.error("Selected date is not available.")
-    st.stop()
+    if selected_date not in available_dates:
+        st.error("Selected date is not available.")
+        st.stop()
 
-selected_date_str = selected_date.strftime("%Y%m%d")
-signature = get_data_signature(DATA_DIR, SENSOR_FOLDERS)
+    selected_date_str = selected_date.strftime("%Y%m%d")
 
-data = load_and_preprocess_data(DATA_DIR, SENSOR_FOLDERS, selected_date, TARGET_PARAMS, signature)
+    signature = get_data_signature(DATA_DIR, SENSOR_FOLDERS)
+
+    data = load_and_preprocess_data(
+        DATA_DIR,
+        SENSOR_FOLDERS,
+        selected_date_str,   # ✅ FIXED (was selected_date)
+        TARGET_PARAMS,
+        signature
+    )
 
     if not data.empty:
         available_params = [c for c in data.columns if c not in ['Time', 'Sensor']]
-        
+
         if available_params:
             param = st.selectbox('Choose Parameter to Visualize', available_params)
             plot_data = data.dropna(subset=[param])
@@ -139,33 +140,38 @@ data = load_and_preprocess_data(DATA_DIR, SENSOR_FOLDERS, selected_date, TARGET_
 
             st.divider()
             st.header('Pairwise Comparison (Filtered for Daytime > 0.5 W/m²)')
+
             col1, col2 = st.columns(2)
-            with col1: s1 = st.selectbox('Sensor A', SENSOR_FOLDERS, index=0)
-            with col2: s2 = st.selectbox('Sensor B', SENSOR_FOLDERS, index=1)
+
+            with col1:
+                s1 = st.selectbox('Sensor A', SENSOR_FOLDERS, index=0)
+
+            with col2:
+                s2 = st.selectbox('Sensor B', SENSOR_FOLDERS, index=1)
 
             if s1 != s2:
                 d1 = plot_data[plot_data['Sensor'] == s1][['Time', param]].set_index('Time')
                 d2 = plot_data[plot_data['Sensor'] == s2][['Time', param]].set_index('Time')
+
                 comp = pd.merge(d1, d2, left_index=True, right_index=True, suffixes=('_A', '_B'))
-                
-                # Filter for irradiance > 0.5 to remove night-time data
-                comp = comp[(comp.iloc[:,0] > 0.5) & (comp.iloc[:,1] > 0.5)].dropna()
-                
+
+                comp = comp[(comp.iloc[:, 0] > 0.5) & (comp.iloc[:, 1] > 0.5)].dropna()
+
                 if not comp.empty:
-                    # Statistics Table
                     stats = comp.describe().T[['mean', 'std', 'min', 'max']]
-                    stats['P50'] = [comp.iloc[:,0].quantile(0.50), comp.iloc[:,1].quantile(0.50)]
-                    stats['P90'] = [comp.iloc[:,0].quantile(0.90), comp.iloc[:,1].quantile(0.90)]
-                    stats['P95'] = [comp.iloc[:,0].quantile(0.95), comp.iloc[:,1].quantile(0.95)]
+                    stats['P50'] = [comp.iloc[:, 0].quantile(0.50), comp.iloc[:, 1].quantile(0.50)]
+                    stats['P90'] = [comp.iloc[:, 0].quantile(0.90), comp.iloc[:, 1].quantile(0.90)]
+                    stats['P95'] = [comp.iloc[:, 0].quantile(0.95), comp.iloc[:, 1].quantile(0.95)]
                     st.table(stats)
-                    
-                    # Advanced Solar Metrics
-                    m1, m2 = comp.iloc[:,0], comp.iloc[:,1]
+
+                    m1, m2 = comp.iloc[:, 0], comp.iloc[:, 1]
+
                     rmse = np.sqrt(((m1 - m2) ** 2).mean())
                     mae = np.abs(m1 - m2).mean()
                     nrmse = (rmse / m1.mean()) * 100 if m1.mean() != 0 else 0
                     bias = (m1 - m2).mean()
                     mape = (np.abs((m1 - m2) / m1).mean()) * 100
+
                     row1 = st.columns(3)
                     row2 = st.columns(3)
 
@@ -178,8 +184,10 @@ data = load_and_preprocess_data(DATA_DIR, SENSOR_FOLDERS, selected_date, TARGET_
                     row2[2].metric("MAPE", f"{mape:.2f}%")
 
                 else:
-                    st.info('No values above 0.5 found in the overlapping timeframe.')
+                    st.info('No values above 0.5 found in overlap.')
+
         else:
-            st.error("Parameters not found. Please check column naming in your files.")
+            st.error("Parameters not found.")
+
     else:
-        st.error('No data loaded.')
+        st.error("No data loaded.")
