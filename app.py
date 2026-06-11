@@ -132,16 +132,6 @@ else:
     )
 
     dates_to_load = pd.date_range(start_date, end_date).strftime("%Y%m%d").tolist()
-
-else:
-    start_date, end_date = st.sidebar.date_input(
-        "Select Date Range",
-        value=(min_d, max_d),
-        min_value=min_d,
-        max_value=max_d
-    )
-
-    dates_to_load = pd.date_range(start_date, end_date).strftime("%Y%m%d").tolist()
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
 
