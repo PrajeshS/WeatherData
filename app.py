@@ -60,7 +60,7 @@ def find_available_dates(base_dir, sensor_folders):
 def load_and_preprocess_data(base_dir, sensor_folders, selected_date_str, target_params, signature):
     all_data = []
     for folder in sensor_folders:
-        file_pattern = os.path.join(base_dir, folder, f'*_{selected_date}_*.csv')
+        file_pattern = os.path.join(base_dir, folder, f'*_{selected_date_str}_*.csv')
         csv_files = glob.glob(file_pattern)
         if not csv_files: continue
 
