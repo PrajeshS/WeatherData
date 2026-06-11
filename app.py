@@ -7,6 +7,13 @@ import glob
 import re
 import plotly.express as px
 
+st.set_page_config(layout='wide', page_title='Weather Data Analysis')
+st.title("Weather Sensor Data Analysis")
+mode = st.sidebar.radio(
+    "Mode",
+    ["Single Day", "Date Range"],
+    key="mode_selector"
+)
 # --- Configuration ---
 SENSOR_FOLDERS = ['WMS 01', 'WMS 02', 'WMS 03', 'WMS 04', 'WMS 05']
 
@@ -95,55 +102,31 @@ def load_and_preprocess_data(base_dir, sensor_folders, dates_to_load, target_par
 
     return pd.concat(all_data, ignore_index=True) if all_data else pd.DataFrame()
 
-st.set_page_config(layout='wide', page_title='Weather Data Analysis')
-st.title('☀️ Weather Sensor Data Analysis')
-mode = st.sidebar.radio(
-    "Mode",
-    ["Single Day", "Date Range"],
-    key="mode_selector"
-)
 available_dates = find_available_dates(DATA_DIR, SENSOR_FOLDERS)
 
 if not available_dates:
-    st.warning("No available dates found")
     st.stop()
 
 min_d = min(available_dates)
 max_d = max(available_dates)
 
 if mode == "Single Day":
-    selected_date = st.sidebar.date_input(
-        "Select Date",
-        value=max_d,
-        min_value=min_d,
-        max_value=max_d,
-        key="single_date"
-    )
-
+    selected_date = st.sidebar.date_input("Select Date", min_value=min_d, max_value=max_d, value=max_d)
     dates_to_load = [selected_date.strftime("%Y%m%d")]
+    start_date = end_date = selected_date
 
 else:
     start_date, end_date = st.sidebar.date_input(
         "Select Date Range",
         value=(min_d, max_d),
         min_value=min_d,
-        max_value=max_d,
-        key="range_date"
+        max_value=max_d
     )
-
     dates_to_load = pd.date_range(start_date, end_date).strftime("%Y%m%d").tolist()
-    start_date = pd.to_datetime(start_date)
-    end_date = pd.to_datetime(end_date)
 
-    signature = get_data_signature(DATA_DIR, SENSOR_FOLDERS)
+signature = get_data_signature(DATA_DIR, SENSOR_FOLDERS)
 
-    data = load_and_preprocess_data(
-    DATA_DIR,
-    SENSOR_FOLDERS,
-    dates_to_load,
-    TARGET_PARAMS,
-    signature
-    )
+data = load_and_preprocess_data(DATA_DIR, SENSOR_FOLDERS, dates_to_load, TARGET_PARAMS, signature)
 
 if data.empty:
     st.error("No data loaded")
