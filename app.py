@@ -78,7 +78,7 @@ def load_and_preprocess_data(base_dir, sensor_folders, dates_to_load, target_par
 
             for f in csv_files:
                 temp = pd.read_csv(f, sep=',', skipinitialspace=True, on_bad_lines='skip')
-                 df_list.append(temp)
+                df_list.append(temp)
 
             df = pd.concat(df_list, ignore_index=True)
             
