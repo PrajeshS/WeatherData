@@ -101,12 +101,14 @@ if not available_dates:
     st.warning('No available dates found. Verify WMS 01-05 folders.')
 
 else:
-    selected_date = st.sidebar.date_input(
-        "📅 Select Date",
-        min_value=min(available_dates),
-        max_value=max(available_dates),
-        value=max(available_dates)
-    )
+    start_date, end_date = st.sidebar.date_input(
+    "📅 Select Date Range",
+    value=(min(available_dates), max(available_dates)),
+    min_value=min(available_dates),
+    max_value=max(available_dates)
+)
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
 
     if selected_date not in available_dates:
         st.error("Selected date is not available.")
@@ -122,6 +124,32 @@ else:
         selected_date_str,   # ✅ FIXED (was selected_date)
         TARGET_PARAMS,
         signature
+    )
+    data['Time'] = pd.to_datetime(data['Time'])
+
+    filtered = data[
+    (data['Time'].dt.date >= start_date.date()) &
+    (data['Time'].dt.date <= end_date.date())
+    ]
+    avg_table = (
+    filtered
+    .groupby('Time')[['GTI Irradiance', 'Albedo Down', 'Albedo Up']]
+    .mean()
+    .reset_index()
+    )
+    avg_table.columns = [
+    'Time',
+    'Avg GTI Irradiance',
+    'Avg Albedo Down',
+    'Avg Albedo Up'
+    ]
+    csv = avg_table.to_csv(index=False).encode('utf-8')
+
+    st.download_button(
+        label="📥 Download Average Data CSV",
+        data=csv,
+        file_name=f"weather_avg_{start_date.date()}_{end_date.date()}.csv",
+        mime="text/csv"
     )
 
     if not data.empty:
