@@ -189,70 +189,73 @@ st.download_button(
     mime="text/csv"
 )
 
-    if not data.empty:
-        available_params = [c for c in data.columns if c not in ['Time', 'Sensor']]
+# --------------------------
+# MAIN VISUALIZATION BLOCK
+# --------------------------
+if not data.empty:
+    available_params = [c for c in data.columns if c not in ['Time', 'Sensor']]
 
-        if available_params:
-            param = st.selectbox('Choose Parameter to Visualize', available_params)
-            plot_data = data.dropna(subset=[param])
+    if available_params:
+        param = st.selectbox('Choose Parameter to Visualize', available_params)
+        plot_data = data.dropna(subset=[param])
 
-            st.subheader(f'Overlap Plot: {param}')
-            st.plotly_chart(px.line(plot_data, x='Time', y=param, color='Sensor'), use_container_width=True)
+        st.subheader(f'Overlap Plot: {param}')
+        st.plotly_chart(px.line(plot_data, x='Time', y=param, color='Sensor'), use_container_width=True)
 
-            st.subheader(f'Average Plot: {param}')
-            avg_df = plot_data.groupby('Time')[param].mean().reset_index()
-            st.plotly_chart(px.line(avg_df, x='Time', y=param), use_container_width=True)
+        st.subheader(f'Average Plot: {param}')
+        avg_df = plot_data.groupby('Time')[param].mean().reset_index()
+        st.plotly_chart(px.line(avg_df, x='Time', y=param), use_container_width=True)
 
-            st.divider()
-            st.header('Pairwise Comparison (Filtered for Daytime > 0.5 W/m²)')
+        st.divider()
+        st.header('Pairwise Comparison (Filtered for Daytime > 0.5 W/m²)')
 
-            col1, col2 = st.columns(2)
+        col1, col2 = st.columns(2)
 
-            with col1:
-                s1 = st.selectbox('Sensor A', SENSOR_FOLDERS, index=0)
+        with col1:
+            s1 = st.selectbox('Sensor A', SENSOR_FOLDERS, index=0)
 
-            with col2:
-                s2 = st.selectbox('Sensor B', SENSOR_FOLDERS, index=1)
+        with col2:
+            s2 = st.selectbox('Sensor B', SENSOR_FOLDERS, index=1)
 
-            if s1 != s2:
-                d1 = plot_data[plot_data['Sensor'] == s1][['Time', param]].set_index('Time')
-                d2 = plot_data[plot_data['Sensor'] == s2][['Time', param]].set_index('Time')
+        if s1 != s2:
+            d1 = plot_data[plot_data['Sensor'] == s1][['Time', param]].set_index('Time')
+            d2 = plot_data[plot_data['Sensor'] == s2][['Time', param]].set_index('Time')
 
-                comp = pd.merge(d1, d2, left_index=True, right_index=True, suffixes=('_A', '_B'))
+            comp = pd.merge(d1, d2, left_index=True, right_index=True, suffixes=('_A', '_B'))
 
-                comp = comp[(comp.iloc[:, 0] > 0.5) & (comp.iloc[:, 1] > 0.5)].dropna()
+            comp = comp[(comp.iloc[:, 0] > 0.5) & (comp.iloc[:, 1] > 0.5)].dropna()
 
-                if not comp.empty:
-                    stats = comp.describe().T[['mean', 'std', 'min', 'max']]
-                    stats['P50'] = [comp.iloc[:, 0].quantile(0.50), comp.iloc[:, 1].quantile(0.50)]
-                    stats['P90'] = [comp.iloc[:, 0].quantile(0.90), comp.iloc[:, 1].quantile(0.90)]
-                    stats['P95'] = [comp.iloc[:, 0].quantile(0.95), comp.iloc[:, 1].quantile(0.95)]
-                    st.table(stats)
+            if not comp.empty:
+                stats = comp.describe().T[['mean', 'std', 'min', 'max']]
+                stats['P50'] = [comp.iloc[:, 0].quantile(0.50), comp.iloc[:, 1].quantile(0.50)]
+                stats['P90'] = [comp.iloc[:, 0].quantile(0.90), comp.iloc[:, 1].quantile(0.90)]
+                stats['P95'] = [comp.iloc[:, 0].quantile(0.95), comp.iloc[:, 1].quantile(0.95)]
+                st.table(stats)
 
-                    m1, m2 = comp.iloc[:, 0], comp.iloc[:, 1]
+                m1, m2 = comp.iloc[:, 0], comp.iloc[:, 1]
 
-                    rmse = np.sqrt(((m1 - m2) ** 2).mean())
-                    mae = np.abs(m1 - m2).mean()
-                    nrmse = (rmse / m1.mean()) * 100 if m1.mean() != 0 else 0
-                    bias = (m1 - m2).mean()
-                    mape = (np.abs((m1 - m2) / m1).mean()) * 100
+                rmse = np.sqrt(((m1 - m2) ** 2).mean())
+                mae = np.abs(m1 - m2).mean()
+                nrmse = (rmse / m1.mean()) * 100 if m1.mean() != 0 else 0
+                bias = (m1 - m2).mean()
+                mape = (np.abs((m1 - m2) / m1).mean()) * 100
 
-                    row1 = st.columns(3)
-                    row2 = st.columns(3)
+                row1 = st.columns(3)
+                row2 = st.columns(3)
 
-                    row1[0].metric("Pearson's r", f"{comp.corr().iloc[0,1]:.4f}")
-                    row1[1].metric("RMSE", f"{rmse:.2f}")
-                    row1[2].metric("MAE", f"{mae:.2f}")
+                row1[0].metric("Pearson's r", f"{comp.corr().iloc[0,1]:.4f}")
+                row1[1].metric("RMSE", f"{rmse:.2f}")
+                row1[2].metric("MAE", f"{mae:.2f}")
 
-                    row2[0].metric("nRMSE", f"{nrmse:.2f}%")
-                    row2[1].metric("Bias", f"{bias:.2f}")
-                    row2[2].metric("MAPE", f"{mape:.2f}%")
+                row2[0].metric("nRMSE", f"{nrmse:.2f}%")
+                row2[1].metric("Bias", f"{bias:.2f}")
+                row2[2].metric("MAPE", f"{mape:.2f}%")
 
-                else:
-                    st.info('No values above 0.5 found in overlap.')
-
-        else:
-            st.error("Parameters not found.")
+            else:
+                st.info("No values above 0.5 found in overlap.")
 
     else:
-        st.error("No data loaded.")
+        st.error("Parameters not found.")
+
+else:
+    st.error("No data loaded.")
