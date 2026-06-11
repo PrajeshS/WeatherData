@@ -175,10 +175,14 @@ avg_table.columns = [
 
 csv = avg_table.to_csv(index=False).encode("utf-8")
 
+if mode == "Single Day":
+    file_name = f"weather_avg_{start_date.strftime('%Y%m%d')}.csv"
+else:
+    file_name = f"weather_avg_{start_date.strftime('%Y%m%d')}_to_{end_date.strftime('%Y%m%d')}.csv"
 st.download_button(
     label="📥 Download Average Data CSV",
     data=csv,
-    file_name="weather_avg.csv",
+    file_name=file_name,
     mime="text/csv"
 )
 
