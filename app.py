@@ -34,6 +34,8 @@ def get_data_signature(base_dir, sensor_folders):
 
     return "_".join(sig)
     
+from datetime import datetime
+
 def find_available_dates(base_dir, sensor_folders):
     all_dates = set()
 
@@ -50,10 +52,12 @@ def find_available_dates(base_dir, sensor_folders):
             if match:
                 all_dates.add(match.group(1))
 
-    return sorted(all_dates, reverse=True)
-
+    return sorted(
+        [datetime.strptime(d, "%Y%m%d").date() for d in all_dates],
+        reverse=True
+    )
 @st.cache_data
-def load_and_preprocess_data(base_dir, sensor_folders, selected_date, target_params, signature):
+def load_and_preprocess_data(base_dir, sensor_folders, selected_date_str, target_params, signature):
     all_data = []
     for folder in sensor_folders:
         file_pattern = os.path.join(base_dir, folder, f'*_{selected_date}_*.csv')
@@ -97,7 +101,24 @@ available_dates = find_available_dates(DATA_DIR, SENSOR_FOLDERS)
 if not available_dates:
     st.warning('No available dates found. Verify WMS 01-05 folders.')
 else:
-    selected_date = st.sidebar.selectbox('📅 Select Date', available_dates)
+    selected_date = st.sidebar.date_input(
+    "📅 Select Date",
+    min_value=min(available_dates),
+    max_value=max(available_dates),
+    value=max(available_dates)
+)
+selected_date = st.sidebar.date_input(
+    "📅 Select Date",
+    min_value=min(available_dates),
+    max_value=max(available_dates),
+    value=max(available_dates)
+)
+
+if selected_date not in available_dates:
+    st.error("Selected date is not available.")
+    st.stop()
+
+selected_date_str = selected_date.strftime("%Y%m%d")
     signature = get_data_signature(DATA_DIR, SENSOR_FOLDERS)
 
     data = load_and_preprocess_data(
