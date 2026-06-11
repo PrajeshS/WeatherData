@@ -109,23 +109,36 @@ if not available_dates:
 
 min_d = min(available_dates)
 max_d = max(available_dates)
+# ensure defaults exist
+start_date = None
+end_date = None
 
 if mode == "Single Day":
-    selected_date = st.sidebar.date_input("Select Date", min_value=min_d, max_value=max_d, value=max_d)
+    selected_date = st.sidebar.date_input(
+        "Select Date",
+        min_value=min_d,
+        max_value=max_d,
+        value=max_d,
+        key="single_date"
+    )
+
+    start_date = selected_date
+    end_date = selected_date
     dates_to_load = [selected_date.strftime("%Y%m%d")]
-    start_date = end_date = selected_date
 
 else:
     start_date, end_date = st.sidebar.date_input(
         "Select Date Range",
         value=(min_d, max_d),
         min_value=min_d,
-        max_value=max_d
+        max_value=max_d,
+        key="range_date"
     )
+
     dates_to_load = pd.date_range(start_date, end_date).strftime("%Y%m%d").tolist()
 
+# load data AFTER dates are defined
 signature = get_data_signature(DATA_DIR, SENSOR_FOLDERS)
-
 data = load_and_preprocess_data(DATA_DIR, SENSOR_FOLDERS, dates_to_load, TARGET_PARAMS, signature)
 
 if data.empty:
@@ -135,26 +148,17 @@ if data.empty:
 data["Time"] = pd.to_datetime(data["Time"])
 data = data.sort_values("Time")
 
-# -----------------------------
-# FILTER (safe for both modes)
-# -----------------------------
-if mode == "Date Range":
-    filtered = data[
-        (data["Time"].dt.date >= start_date.date()) &
-        (data["Time"].dt.date <= end_date.date())
-    ]
-else:
-    filtered = data.copy()
-
+# SAFE FILTER (works for both modes)
+filtered = data[
+    (data["Time"].dt.date >= start_date) &
+    (data["Time"].dt.date <= end_date)
+]
 # -----------------------------
 # AVERAGE TABLE
 # -----------------------------
-avg_table = (
-    filtered
-    .groupby("Time")[["GTI Irradiance", "Albedo Down", "Albedo Up"]]
-    .mean()
-    .reset_index()
-)
+avg_table = filtered.groupby(["Time"])[
+    ["GTI Irradiance", "Albedo Down", "Albedo Up"]
+].mean().reset_index()
 
 avg_table.columns = [
     "Time",
