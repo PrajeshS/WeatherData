@@ -18,7 +18,22 @@ TARGET_PARAMS = {
 }
 
 DATA_DIR = '.'
-  
+
+def get_data_signature(base_dir, sensor_folders):
+    sig = []
+
+    for folder in sensor_folders:
+        path = os.path.join(base_dir, folder)
+        files = glob.glob(os.path.join(path, "*.csv"))
+
+        if files:
+            latest_time = max(os.path.getmtime(f) for f in files)
+            sig.append(f"{len(files)}_{latest_time}")
+        else:
+            sig.append("0_0")
+
+    return "_".join(sig)
+    
 def find_available_dates(base_dir, sensor_folders):
     all_dates = set()
 
@@ -38,7 +53,7 @@ def find_available_dates(base_dir, sensor_folders):
     return sorted(all_dates, reverse=True)
 
 @st.cache_data
-def load_and_preprocess_data(base_dir, sensor_folders, selected_date, target_params):
+def load_and_preprocess_data(base_dir, sensor_folders, selected_date, target_params, signature):
     all_data = []
     for folder in sensor_folders:
         file_pattern = os.path.join(base_dir, folder, f'*_{selected_date}_*.csv')
@@ -83,7 +98,15 @@ if not available_dates:
     st.warning('No available dates found. Verify WMS 01-05 folders.')
 else:
     selected_date = st.sidebar.selectbox('📅 Select Date', available_dates)
-    data = load_and_preprocess_data(DATA_DIR, SENSOR_FOLDERS, selected_date, TARGET_PARAMS)
+    signature = get_data_signature(DATA_DIR, SENSOR_FOLDERS)
+
+    data = load_and_preprocess_data(
+    DATA_DIR,
+    SENSOR_FOLDERS,
+    selected_date,
+    TARGET_PARAMS,
+    signature
+)
 
     if not data.empty:
         available_params = [c for c in data.columns if c not in ['Time', 'Sensor']]
