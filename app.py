@@ -8,7 +8,7 @@ import re
 import plotly.express as px
 
 st.set_page_config(layout='wide', page_title='Weather Data Analysis')
-st.title("Weather Sensor Data Analysis")
+st.title("☀️ Weather Sensor Data Analysis")
 mode = st.sidebar.radio(
     "Mode",
     ["Single Day", "Date Range"],
