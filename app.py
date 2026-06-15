@@ -6,6 +6,8 @@ import os
 import glob
 import re
 import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 st.set_page_config(layout='wide', page_title='Weather Data Analysis')
 st.title("☀️ Weather Sensor Data Analysis")
@@ -196,12 +198,57 @@ if not data.empty:
         param = st.selectbox('Choose Parameter to Visualize', available_params)
         plot_data = data.dropna(subset=[param])
 
-        st.subheader(f'Overlap Plot: {param}')
-        st.plotly_chart(px.line(plot_data, x='Time', y=param, color='Sensor'), use_container_width=True)
+        st.subheader(f"{param} Comparison")
 
-        st.subheader(f'Average Plot: {param}')
-        avg_df = plot_data.groupby('Time')[param].mean().reset_index()
-        st.plotly_chart(px.line(avg_df, x='Time', y=param), use_container_width=True)
+        avg_df = plot_data.groupby("Time")[param].mean().reset_index()
+        
+        fig = make_subplots(
+            rows=2,
+            cols=1,
+            shared_xaxes=True,
+            vertical_spacing=0.08,
+            subplot_titles=(
+                f"Sensor Overlap - {param}",
+                f"Average of All Sensors - {param}"
+            )
+        )
+        
+        # Top plot: individual sensors
+        for sensor in plot_data["Sensor"].unique():
+            sensor_data = plot_data[plot_data["Sensor"] == sensor]
+        
+            fig.add_trace(
+                go.Scatter(
+                    x=sensor_data["Time"],
+                    y=sensor_data[param],
+                    mode="lines",
+                    name=sensor
+                ),
+                row=1,
+                col=1
+            )
+        
+        # Bottom plot: average
+        fig.add_trace(
+            go.Scatter(
+                x=avg_df["Time"],
+                y=avg_df[param],
+                mode="lines",
+                name="Average"
+            ),
+            row=2,
+            col=1
+        )
+        
+        fig.update_layout(
+            height=900,
+            hovermode="x unified",
+            showlegend=True
+        )
+        
+        fig.update_xaxes(matches="x")
+        
+        st.plotly_chart(fig, use_container_width=True)
 
         st.divider()
         st.header('Pairwise Comparison (Filtered for Daytime > 0.5 W/m²)')
