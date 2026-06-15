@@ -22,10 +22,10 @@ SENSOR_FOLDERS = ['WMS 01', 'WMS 02', 'WMS 03', 'WMS 04', 'WMS 05']
 # Standardized keys with flexible matching to handle naming variations and typos like 'AldedoUp'
 TARGET_PARAMS = {
     'GTI Irradiance': ['GTI;solar_irradiance_tilted;Avg', 'GTI;solar_irradiance;Avg'],
-    'Albedo Down': ['AlbedoDown;solar_irradiance;Avg'],
-    'Albedo Up': ['AldedoUp;solar_irradiance;Avg', 'AlbedoUp;solar_irradiance;Avg'],
-    'Temperature': ['ATRHP;temperature;Avg'],
-    'Humidity': ['ATRHP;humidity;Avg']
+    'Albedo Down Irradiance': ['AlbedoDown;solar_irradiance;Avg'],
+    'Albedo Up Irradiance': ['AldedoUp;solar_irradiance;Avg', 'AlbedoUp;solar_irradiance;Avg'],
+    'ATRHP Temperature': ['ATRHP;temperature;Avg'],
+    'ATRHP Humidity': ['ATRHP;humidity;Avg']
 }
 
 DATA_DIR = '.'
@@ -167,7 +167,7 @@ filtered = data[
 # AVERAGE TABLE
 # -----------------------------
 avg_table = filtered.groupby(["Time"])[
-    ["GTI Irradiance", "Albedo Down", "Albedo Up", "Temperature", "Humidity"]
+    ["GTI Irradiance", "Albedo Down Irradiance", "Albedo Up Irradiance", "ATRHP Temperature", "ATRHP Humidity"]
 ].mean().reset_index()
 
 avg_table.columns = [
