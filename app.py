@@ -167,14 +167,16 @@ filtered = data[
 # AVERAGE TABLE
 # -----------------------------
 avg_table = filtered.groupby(["Time"])[
-    ["GTI Irradiance", "Albedo Down", "Albedo Up"]
+    ["GTI Irradiance", "Albedo Down", "Albedo Up", "Temperature", "Humidity"]
 ].mean().reset_index()
 
 avg_table.columns = [
     "Time",
     "Avg GTI Irradiance",
     "Avg Albedo Down",
-    "Avg Albedo Up"
+    "Avg Albedo Up",
+    "Avg Temperature",
+    "Avg Humidity"
 ]
 
 csv = avg_table.to_csv(index=False).encode("utf-8")
