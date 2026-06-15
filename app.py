@@ -173,10 +173,10 @@ avg_table = filtered.groupby(["Time"])[
 avg_table.columns = [
     "Time",
     "Avg GTI Irradiance",
-    "Avg Albedo Down",
-    "Avg Albedo Up",
-    "Avg Temperature",
-    "Avg Humidity"
+    "Avg Albedo Down Irradiance",
+    "Avg Albedo Up Irradiance",
+    "Avg ATRHP Temperature",
+    "Avg ATRHP Humidity"
 ]
 
 csv = avg_table.to_csv(index=False).encode("utf-8")
