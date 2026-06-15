@@ -23,7 +23,9 @@ SENSOR_FOLDERS = ['WMS 01', 'WMS 02', 'WMS 03', 'WMS 04', 'WMS 05']
 TARGET_PARAMS = {
     'GTI Irradiance': ['GTI;solar_irradiance_tilted;Avg', 'GTI;solar_irradiance;Avg'],
     'Albedo Down': ['AlbedoDown;solar_irradiance;Avg'],
-    'Albedo Up': ['AldedoUp;solar_irradiance;Avg', 'AlbedoUp;solar_irradiance;Avg']
+    'Albedo Up': ['AldedoUp;solar_irradiance;Avg', 'AlbedoUp;solar_irradiance;Avg'],
+    'Temperature': ['ATRHP;temperature;Avg'],
+    'Humidity': ['ATRHP;humidity;Avg']
 }
 
 DATA_DIR = '.'
@@ -251,7 +253,7 @@ if not data.empty:
         st.plotly_chart(fig, use_container_width=True)
 
         st.divider()
-        st.header('Pairwise Comparison (Filtered for Daytime > 0.5 W/m²)')
+        st.header('Pairwise Comparison (Filtered for Daytime > 0.5)')
 
         col1, col2 = st.columns(2)
 
