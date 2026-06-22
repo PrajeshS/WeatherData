@@ -21,11 +21,11 @@ SENSOR_FOLDERS = ['WMS 01', 'WMS 02', 'WMS 03', 'WMS 04', 'WMS 05']
 
 # Standardized keys with flexible matching to handle naming variations and typos like 'AldedoUp'
 TARGET_PARAMS = {
-    'GTI Irradiance': ['GTI;solar_irradiance_tilted;Avg', 'GTI;solar_irradiance;Avg'],
-    'Albedo Down Irradiance': ['AlbedoDown;solar_irradiance;Avg'],
-    'Albedo Up Irradiance': ['AldedoUp;solar_irradiance;Avg', 'AlbedoUp;solar_irradiance;Avg'],
-    'ATRHP Temperature': ['ATRHP;temperature;Avg'],
-    'ATRHP Humidity': ['ATRHP;humidity;Avg']
+    'GTI Irradiance (W/m²)': ['GTI;solar_irradiance_tilted;Avg', 'GTI;solar_irradiance;Avg'],
+    'Albedo Down Irradiance (W/m²)': ['AlbedoDown;solar_irradiance;Avg'],
+    'Albedo Up Irradiance (W/m²)': ['AldedoUp;solar_irradiance;Avg', 'AlbedoUp;solar_irradiance;Avg'],
+    'ATRHP Temperature (°C))': ['ATRHP;temperature;Avg'],
+    'ATRHP Humidity (%)': ['ATRHP;humidity;Avg']
 }
 
 DATA_DIR = '.'
