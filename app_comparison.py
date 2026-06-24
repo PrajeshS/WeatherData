@@ -258,11 +258,6 @@ selected_display = st.selectbox(
 
 param = DISPLAY_OPTIONS[selected_display]
 
-param = st.selectbox(
-    "Choose Parameter to Visualize",
-    available_params
-)
-
 forecast_col = FORECAST_MAPPING[param]
 
 comparison = pd.merge(
