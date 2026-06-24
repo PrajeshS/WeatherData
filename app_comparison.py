@@ -318,8 +318,7 @@ fig.add_trace(
 )
 
 fig.update_layout(
-    title=selected_display,
-    height=700,
+    height=900,
     hovermode="x unified"
 )
 
