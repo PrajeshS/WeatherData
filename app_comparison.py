@@ -291,7 +291,7 @@ if param in [
 if comparison.empty:
     st.warning("No overlapping data found.")
     st.stop()
-
+st.subheader(f"{param} Comparison")
 # -----------------------------
 # PLOT
 # -----------------------------
@@ -316,7 +316,7 @@ fig.add_trace(
 )
 
 fig.update_layout(
-    title=f"{param}: Measured vs Forecast",
+    title=f"Measured vs Forecast - {param}",
     height=700,
     hovermode="x unified"
 )
