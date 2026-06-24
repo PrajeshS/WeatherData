@@ -332,7 +332,7 @@ st.plotly_chart(
 
 st.divider()
 
-st.header("Forecast Comparison Statistics (Filtered for Daytime > 0.5)")
+st.header("Comparison Statistics (Filtered for Daytime > 0.5)")
 
 stats = comparison_stats[
     ["Measured", "Forecast"]
