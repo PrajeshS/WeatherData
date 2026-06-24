@@ -321,7 +321,7 @@ fig.add_trace(
 )
 
 fig.update_layout(
-    height=800,
+    height=700,
     hovermode="x unified"
 )
 
