@@ -278,17 +278,20 @@ comparison.columns = [
     "Forecast"
 ]
 
-comparison = comparison.dropna()
+# Keep full dataset for plotting
+comparison_full = comparison.copy()
 
+# Apply threshold ONLY for statistics
 if param in [
     "GTI Irradiance (W/m²)",
     "Albedo Up Irradiance (W/m²)"
 ]:
-    comparison = comparison[
-        (comparison["Measured"] > 0.5)
-        &
+    comparison_stats = comparison[
+        (comparison["Measured"] > 0.5) &
         (comparison["Forecast"] > 0.5)
     ]
+else:
+    comparison_stats = comparison.copy()
 
 if comparison.empty:
     st.warning("No overlapping data found.")
@@ -301,8 +304,8 @@ fig = go.Figure()
 
 fig.add_trace(
     go.Scatter(
-        x=comparison["Time"],
-        y=comparison["Measured"],
+        x=comparison_full["Time"],
+        y=comparison_full["Measured"],
         mode="lines",
         name="Measured Average"
     )
@@ -310,8 +313,8 @@ fig.add_trace(
 
 fig.add_trace(
     go.Scatter(
-        x=comparison["Time"],
-        y=comparison["Forecast"],
+        x=comparison_full["Time"],
+        y=comparison_full["Forecast"],
         mode="lines",
         name="Forecast"
     )
@@ -331,31 +334,31 @@ st.divider()
 
 st.header("Forecast Comparison Statistics")
 
-stats = comparison[
+stats = comparison_stats[
     ["Measured", "Forecast"]
 ].describe().T[
     ["mean", "std", "min", "max"]
 ]
 
 stats["P50"] = [
-    comparison["Measured"].quantile(0.50),
-    comparison["Forecast"].quantile(0.50)
+    comparison_stats["Measured"].quantile(0.50),
+    comparison_stats["Forecast"].quantile(0.50)
 ]
 
 stats["P90"] = [
-    comparison["Measured"].quantile(0.90),
-    comparison["Forecast"].quantile(0.90)
+    comparison_stats["Measured"].quantile(0.90),
+    comparison_stats["Forecast"].quantile(0.90)
 ]
 
 stats["P95"] = [
-    comparison["Measured"].quantile(0.95),
-    comparison["Forecast"].quantile(0.95)
+    comparison_stats["Measured"].quantile(0.95),
+    comparison_stats["Forecast"].quantile(0.95)
 ]
 
 st.table(stats)
 
-m1 = comparison["Measured"]
-m2 = comparison["Forecast"]
+m1 = comparison_stats["Measured"]
+m2 = comparison_stats["Forecast"]
 
 rmse = np.sqrt(((m1 - m2) ** 2).mean())
 mae = np.abs(m1 - m2).mean()
