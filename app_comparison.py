@@ -244,12 +244,19 @@ avg_sensor["MatchKey"] = avg_sensor["Time"].dt.strftime("%m-%d %H:%M")
 
 forecast = load_forecast_data()
 
-available_params = [
-    "GTI Irradiance (W/m²)",
-    "Albedo Up Irradiance (W/m²)",
-    "ATRHP Temperature (°C)",
-    "ATRHP Humidity (%)"
-]
+DISPLAY_OPTIONS = {
+    "GTI Irradiance vs gti (W/m²)": "GTI Irradiance (W/m²)",
+    "Albedo Up Irradiance vs ghi (W/m²)": "Albedo Up Irradiance (W/m²)",
+    "ATRHP Temperature vs air_temp (°C)": "ATRHP Temperature (°C)",
+    "ATRHP Humidity vs relative_humidity (%)": "ATRHP Humidity (%)"
+}
+
+selected_display = st.selectbox(
+    "Choose Parameter to Visualize",
+    list(DISPLAY_OPTIONS.keys())
+)
+
+param = DISPLAY_OPTIONS[selected_display]
 
 param = st.selectbox(
     "Choose Parameter to Visualize",
@@ -291,7 +298,7 @@ if param in [
 if comparison.empty:
     st.warning("No overlapping data found.")
     st.stop()
-st.subheader(f"{param} Comparison")
+st.subheader(f"{selected_display} Comparison")
 # -----------------------------
 # PLOT
 # -----------------------------
@@ -316,7 +323,7 @@ fig.add_trace(
 )
 
 fig.update_layout(
-    title=f"Measured vs Forecast - {param}",
+    title=selected_display,
     height=700,
     hovermode="x unified"
 )
