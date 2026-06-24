@@ -293,7 +293,7 @@ if param in [
 else:
     comparison_stats = comparison.copy()
 
-if comparison.empty:
+if comparison_stats.empty:
     st.warning("No overlapping data found.")
     st.stop()
 st.subheader(f"{selected_display} Comparison")
@@ -380,7 +380,7 @@ row2 = st.columns(3)
 
 row1[0].metric(
     "Pearson's r",
-    f"{comparison[['Measured','Forecast']].corr().iloc[0,1]:.4f}"
+    f"{comparison_stats[['Measured','Forecast']].corr().iloc[0,1]:.4f}"
 )
 
 row1[1].metric(
