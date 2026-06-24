@@ -245,10 +245,10 @@ avg_sensor["MatchKey"] = avg_sensor["Time"].dt.strftime("%m-%d %H:%M")
 forecast = load_forecast_data()
 
 available_params = [
-    "GTI Irradiance vs gti (W/m²)",
-    "Albedo Up Irradiance vs ghi (W/m²)",
-    "ATRHP Temperature vs air_temp (°C)",
-    "ATRHP Humidity vs relative_humidity (%)"
+    "GTI Irradiance (W/m²)",
+    "Albedo Up Irradiance (W/m²)",
+    "ATRHP Temperature (°C)",
+    "ATRHP Humidity (%)"
 ]
 
 param = st.selectbox(
