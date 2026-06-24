@@ -54,7 +54,7 @@ def get_data_signature(base_dir, sensor_folders):
     return "_".join(sig)
     
 from datetime import datetime
-
+@st.cache_data
 def find_available_dates(base_dir, sensor_folders):
     all_dates = set()
 
