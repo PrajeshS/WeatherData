@@ -153,7 +153,7 @@ end_date = None
 
 if mode == "Single Day":
     selected_date = st.sidebar.date_input(
-        "Select Date",
+        "📅 Select Date",
         min_value=min_d,
         max_value=max_d,
         value=max_d,
@@ -166,7 +166,7 @@ if mode == "Single Day":
 
 else:
     start_date, end_date = st.sidebar.date_input(
-        "Select Date Range",
+        "📅 Select Date Range",
         value=(min_d, max_d),
         min_value=min_d,
         max_value=max_d,
