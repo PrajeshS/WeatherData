@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 st.set_page_config(layout='wide', page_title='Weather Data Analysis')
-st.title("☀️ SolarGIS Weather Forecast Data Analysis")
+st.title("☀️ SolarGIS Weather TMY Data Analysis")
 mode = st.sidebar.radio(
     "Mode",
     ["Single Day", "Date Range"],
