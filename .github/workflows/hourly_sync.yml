@@ -1,9 +1,9 @@
 name: Weather Data Sync
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '3 * * * *'
     #- cron: '15 * * * *'
-    - cron: '30 * * * *'
+    - cron: '33 * * * *'
     #- cron: '45 * * * *'
     
   workflow_dispatch: {}
