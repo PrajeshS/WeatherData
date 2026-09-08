@@ -11,6 +11,8 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,6 +29,6 @@ jobs:
         env:
           AM_USER: ${{ secrets.AM_USER }}
           AM_PROJECT: ${{ secrets.AM_PROJECT }}
-          GH_PAT: ${{ secrets.GH_PAT }}
+          GH_PAT: ${{ secrets.GITHUB_TOKEN }}
           AM_TOKEN: ${{ secrets.AM_TOKEN }}
         run: python sync_data.py
