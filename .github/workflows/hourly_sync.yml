@@ -1,21 +1,30 @@
 name: Weather Data Sync
+
 on:
   schedule:
     - cron: '3 * * * *'
-    #- cron: '15 * * * *'
+    # - cron: '15 * * * *'
     - cron: '33 * * * *'
-    #- cron: '45 * * * *'
+    # - cron: '45 * * * *'
     
   workflow_dispatch: {}
+
+concurrency:
+  group: weather-data-sync
+  cancel-in-progress: false
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+
     permissions:
       contents: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
